@@ -54,7 +54,7 @@ export function select(options: SelectOptions): Promise<string | null> {
       if (searchQuery) {
         lines.push(chalk.dim(`  🔍 search: ${searchQuery}`));
       } else {
-        lines.push(chalk.dim("  Type to search, ↑↓/jk to move, Enter to select, q to cancel"));
+        lines.push(chalk.dim("  Type to search, ↑↓/jk/Ctrl+jk to move, Enter to select, q to cancel"));
       }
 
       filteredItems = getFilteredItems();
@@ -140,7 +140,7 @@ export function select(options: SelectOptions): Promise<string | null> {
       }
 
       // Enter
-      if (key === "\r" || key === "\n") {
+      if (key === "\r") {
         cleanup();
         const selected = filteredItems[cursor];
         stdout.write("\n");
@@ -152,15 +152,15 @@ export function select(options: SelectOptions): Promise<string | null> {
         return;
       }
 
-      // Arrow up / k (when not searching)
-      if (key === "\x1B[A" || (key === "k" && searchQuery === "")) {
+      // Arrow up / k (when not searching) / Ctrl+k
+      if (key === "\x1B[A" || (key === "k" && searchQuery === "") || key === "\x0B") {
         cursor = Math.max(0, cursor - 1);
         render();
         return;
       }
 
-      // Arrow down / j (when not searching)
-      if (key === "\x1B[B" || (key === "j" && searchQuery === "")) {
+      // Arrow down / j (when not searching) / Ctrl+j
+      if (key === "\x1B[B" || (key === "j" && searchQuery === "") || key === "\x0A") {
         cursor = Math.min(filteredItems.length - 1, cursor + 1);
         render();
         return;
