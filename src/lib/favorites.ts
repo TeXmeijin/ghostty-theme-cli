@@ -19,7 +19,9 @@ const DEFAULT_FAVORITES = [
 ];
 
 function getFavoritesPath(): string {
-  return join(homedir(), ".config", "ghostty-theme-cli", "favorites.json");
+  const xdgConfigHome =
+    process.env.XDG_CONFIG_HOME || join(homedir(), ".config");
+  return join(xdgConfigHome, "ghostty-theme-cli", "favorites.json");
 }
 
 function ensureDir(): void {
