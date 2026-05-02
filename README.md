@@ -21,7 +21,7 @@
 npm install -g ghostty-theme
 ```
 
-> **Requires**: [Ghostty](https://ghostty.org) terminal installed and available in your `PATH`.
+> **Requires**: [Ghostty](https://ghostty.org) 1.3.0 or newer installed and available in your `PATH`.
 
 ## Usage
 
@@ -67,8 +67,10 @@ It always picks a different theme from the one currently set.
 ## How It Works
 
 1. Reads available themes via `ghostty +list-themes`
-2. Directly edits the `theme = ...` line in your Ghostty config (`~/.config/ghostty/config`)
-3. Ghostty live-reloads, so theme changes apply instantly — no restart needed
+2. Updates the `theme = ...` line in your Ghostty config
+3. Reloads Ghostty through AppleScript on Ghostty 1.3.0+
+
+**Manual config reload is not required.**
 
 You can override the config path with the `GHOSTTY_CONFIG_PATH` environment variable.
 
