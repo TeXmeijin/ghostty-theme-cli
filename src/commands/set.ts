@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { setTheme, getCurrentTheme } from "../lib/config.js";
+import { applyTheme, getCurrentTheme } from "../lib/config.js";
 import { findTheme } from "../lib/themes.js";
 
 export function setCommand(name: string): void {
@@ -10,7 +10,12 @@ export function setCommand(name: string): void {
   }
 
   const prev = getCurrentTheme();
-  setTheme(resolved);
+  try {
+    applyTheme(resolved);
+  } catch (error) {
+    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
+    process.exit(1);
+  }
 
   if (prev) {
     console.log(chalk.dim(`${prev} →`) + " " + chalk.bold.green(resolved));

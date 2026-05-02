@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { setTheme, getCurrentTheme } from "../lib/config.js";
+import { applyTheme, getCurrentTheme } from "../lib/config.js";
 import { getThemeNames } from "../lib/themes.js";
 import { loadFavorites } from "../lib/favorites.js";
 import { select } from "../lib/prompt.js";
@@ -25,7 +25,12 @@ export async function listCommand(options: { all?: boolean }): Promise<void> {
   }
 
   const prev = getCurrentTheme();
-  setTheme(selected);
+  try {
+    applyTheme(selected);
+  } catch (error) {
+    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
+    process.exit(1);
+  }
 
   if (prev) {
     console.log(chalk.dim(`${prev} →`) + " " + chalk.bold.green(selected));

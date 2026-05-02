@@ -12,7 +12,7 @@ const program = new Command();
 program
   .name("ghostty-theme")
   .description("CLI tool for managing Ghostty terminal themes")
-  .version("1.0.0");
+  .version("1.1.0");
 
 program
   .command("set <name>")

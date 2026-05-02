@@ -17,7 +17,7 @@ export function listAllThemes(): Theme[] {
 }
 
 export function getThemeNames(): string[] {
-  return listAllThemes().map((t) => t.name);
+  return [...new Set(listAllThemes().map((t) => t.name))];
 }
 
 export function themeExists(name: string): boolean {
