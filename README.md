@@ -68,7 +68,7 @@ It always picks a different theme from the one currently set.
 
 1. Reads available themes via `ghostty +list-themes`
 2. Updates the `theme = ...` line in your Ghostty config
-3. Reloads Ghostty through AppleScript on Ghostty 1.3.0+
+3. Reloads any running Ghostty or Cmux window through AppleScript on Ghostty 1.3.0+
 
 **Manual config reload is not required.**
 

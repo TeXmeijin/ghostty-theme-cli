@@ -80,38 +80,25 @@ function escapeAppleScriptString(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
-function getGhosttyAppPath(): string {
-  try {
-    const ghosttyPath = execFileSync("which", ["ghostty"], {
-      encoding: "utf-8",
-    }).trim();
-    const marker = ".app/Contents/MacOS/ghostty";
-    const markerIndex = ghosttyPath.indexOf(marker);
-    if (markerIndex !== -1) {
-      return ghosttyPath.slice(0, markerIndex + ".app".length);
-    }
-  } catch {
-    // Fall back to the standard app location below.
+function isProcessRunning(processName: string): boolean {
+  if (process.platform !== "darwin") {
+    return false;
   }
 
-  return "/Applications/Ghostty.app";
+  try {
+    execFileSync("pgrep", ["-x", processName], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-function reloadGhosttyConfig(): void {
-  if (process.platform !== "darwin") {
-    throw new Error("Automatic Ghostty config reload requires macOS AppleScript.");
-  }
-
-  const appPath = getGhosttyAppPath();
-  if (!existsSync(appPath)) {
-    throw new Error(`Ghostty.app was not found at ${appPath}.`);
-  }
-
+function reloadConfigInApp(appName: string): void {
   execFileSync(
     "osascript",
     [
       "-e",
-      `tell application "${escapeAppleScriptString(appPath)}"`,
+      `tell application "${escapeAppleScriptString(appName)}"`,
       "-e",
       "set win to front window",
       "-e",
@@ -125,6 +112,35 @@ function reloadGhosttyConfig(): void {
     ],
     { stdio: "ignore" },
   );
+}
+
+function reloadTerminalConfigs(): void {
+  if (process.platform !== "darwin") {
+    throw new Error("Automatic Ghostty config reload requires macOS AppleScript.");
+  }
+
+  const apps = [
+    { appName: "Ghostty", processNames: ["Ghostty", "ghostty"] },
+    { appName: "Cmux", processNames: ["Cmux", "cmux"] },
+  ];
+
+  let reloadCount = 0;
+  const failedApps: string[] = [];
+
+  for (const { appName, processNames } of apps) {
+    if (processNames.some(isProcessRunning)) {
+      try {
+        reloadConfigInApp(appName);
+        reloadCount++;
+      } catch {
+        failedApps.push(appName);
+      }
+    }
+  }
+
+  if (reloadCount === 0 && failedApps.length > 0) {
+    throw new Error(`Failed to reload config in ${failedApps.join(" and ")}.`);
+  }
 }
 
 export function readConfig(): string {
@@ -172,5 +188,5 @@ export function setTheme(themeName: string): void {
 export function applyTheme(themeName: string): void {
   ensureGhosttySupportsAppleScript();
   setTheme(themeName);
-  reloadGhosttyConfig();
+  reloadTerminalConfigs();
 }
