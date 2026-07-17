@@ -3,8 +3,19 @@ import { applyTheme, getCurrentTheme } from "../lib/config.js";
 import { getThemeNames } from "../lib/themes.js";
 import { loadFavorites } from "../lib/favorites.js";
 
-export function randomCommand(options: { all?: boolean }): void {
-  const pool = [...new Set(options.all ? getThemeNames() : loadFavorites())];
+export function randomCommand(options: { all?: boolean; dark?: boolean }): void {
+  let pool = [
+    ...new Set(
+      options.all
+        ? getThemeNames(options.dark ? "dark" : "all")
+        : loadFavorites(),
+    ),
+  ];
+
+  if (options.dark && !options.all) {
+    const darkThemes = new Set(getThemeNames("dark"));
+    pool = pool.filter((theme) => darkThemes.has(theme));
+  }
 
   if (pool.length === 0) {
     console.error(chalk.red("No themes available."));

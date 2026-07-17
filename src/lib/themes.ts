@@ -1,8 +1,14 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import type { Theme } from "../types.js";
 
-export function listAllThemes(): Theme[] {
-  const output = execSync("ghostty +list-themes", { encoding: "utf-8" });
+export type ThemeColor = "all" | "dark" | "light";
+
+export function listAllThemes(color: ThemeColor = "all"): Theme[] {
+  const output = execFileSync(
+    "ghostty",
+    ["+list-themes", "--plain", `--color=${color}`],
+    { encoding: "utf-8" }
+  );
   return output
     .trim()
     .split("\n")
@@ -16,8 +22,8 @@ export function listAllThemes(): Theme[] {
     });
 }
 
-export function getThemeNames(): string[] {
-  return [...new Set(listAllThemes().map((t) => t.name))];
+export function getThemeNames(color: ThemeColor = "all"): string[] {
+  return [...new Set(listAllThemes(color).map((t) => t.name))];
 }
 
 export function themeExists(name: string): boolean {
