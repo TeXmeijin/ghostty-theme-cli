@@ -12,7 +12,7 @@ const program = new Command();
 program
   .name("ghostty-theme")
   .description("CLI tool for managing Ghostty terminal themes")
-  .version("1.3.0");
+  .version("1.3.1");
 
 program
   .command("set <name>")
@@ -24,6 +24,7 @@ program
   .description("Apply a random theme from favorites")
   .option("--all", "Pick from all themes instead of favorites")
   .option("--dark", "Pick only dark themes")
+  .option("--light", "Pick only light themes")
   .action(randomCommand);
 
 program

@@ -3,18 +3,26 @@ import { applyTheme, getCurrentTheme } from "../lib/config.js";
 import { getThemeNames } from "../lib/themes.js";
 import { loadFavorites } from "../lib/favorites.js";
 
-export function randomCommand(options: { all?: boolean; dark?: boolean }): void {
+export function randomCommand(options: {
+  all?: boolean;
+  dark?: boolean;
+  light?: boolean;
+}): void {
+  if (options.dark && options.light) {
+    console.error(chalk.red("Choose either --dark or --light, not both."));
+    process.exit(1);
+  }
+
+  const color = options.dark ? "dark" : options.light ? "light" : "all";
   let pool = [
     ...new Set(
-      options.all
-        ? getThemeNames(options.dark ? "dark" : "all")
-        : loadFavorites(),
+      options.all ? getThemeNames(color) : loadFavorites(),
     ),
   ];
 
-  if (options.dark && !options.all) {
-    const darkThemes = new Set(getThemeNames("dark"));
-    pool = pool.filter((theme) => darkThemes.has(theme));
+  if (color !== "all" && !options.all) {
+    const matchingThemes = new Set(getThemeNames(color));
+    pool = pool.filter((theme) => matchingThemes.has(theme));
   }
 
   if (pool.length === 0) {

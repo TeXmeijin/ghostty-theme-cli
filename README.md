@@ -30,9 +30,10 @@ ghostty-theme              # Browse favorites interactively
 ghostty-theme list         # Same as above
 ghostty-theme list --all   # Browse all available themes
 ghostty-theme set <name>   # Set theme directly by name
-ghostty-theme random              # Random theme from favorites
-ghostty-theme random --all        # Random theme from all themes
-ghostty-theme random --all --dark # Random dark theme from all themes
+ghostty-theme random               # Random theme from favorites
+ghostty-theme random --all         # Random theme from all themes
+ghostty-theme random --all --dark  # Random dark theme from all themes
+ghostty-theme random --all --light # Random light theme from all themes
 ghostty-theme add <name>   # Add a theme to favorites
 ghostty-theme add -c       # Add the current theme to favorites
 ghostty-theme remove       # Remove a theme from favorites (interactive)
@@ -59,10 +60,12 @@ Your favorite themes are stored in `~/.config/ghostty-theme-cli/favorites.json`.
 Shuffle through your favorites (or all themes) with a single command:
 
 ```bash
-ghostty-theme random              # Pick from favorites
-ghostty-theme random --all        # Pick from everything
-ghostty-theme random --dark       # Pick only dark favorites
-ghostty-theme random --all --dark # Pick from every dark theme
+ghostty-theme random               # Pick from favorites
+ghostty-theme random --all         # Pick from everything
+ghostty-theme random --dark        # Pick only dark favorites
+ghostty-theme random --light       # Pick only light favorites
+ghostty-theme random --all --dark  # Pick from every dark theme
+ghostty-theme random --all --light # Pick from every light theme
 ```
 
 It always picks a different theme from the one currently set.
