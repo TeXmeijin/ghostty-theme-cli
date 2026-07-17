@@ -80,38 +80,86 @@ function escapeAppleScriptString(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
-function isProcessRunning(processName: string): boolean {
-  if (process.platform !== "darwin") {
+function debug(message: string): void {
+  if (process.env.GHOSTTY_THEME_DEBUG) {
+    console.error(`[ghostty-theme] ${message}`);
+  }
+}
+
+function getAppPath(commandName: string, appName: string): string {
+  try {
+    const commandPath = execFileSync("which", [commandName], {
+      encoding: "utf-8",
+    }).trim();
+    const marker = `.app/Contents/MacOS/${commandName}`;
+    const markerIndex = commandPath.indexOf(marker);
+    if (markerIndex !== -1) {
+      const appPath = commandPath.slice(0, markerIndex + ".app".length);
+      debug(`${appName}: resolved app path from ${commandName}: ${appPath}`);
+      return appPath;
+    }
+  } catch {
+    // Fall back to the standard app location below.
+  }
+
+  const appPath = `/Applications/${appName}.app`;
+  debug(`${appName}: using fallback app path: ${appPath}`);
+  return appPath;
+}
+
+function isAppRunning(appPath: string): boolean {
+  if (!existsSync(appPath)) {
+    debug(`app not found: ${appPath}`);
     return false;
   }
 
   try {
-    execFileSync("pgrep", ["-x", processName], { stdio: "ignore" });
-    return true;
+    const output = execFileSync(
+      "osascript",
+      ["-e", `application "${escapeAppleScriptString(appPath)}" is running`],
+      { encoding: "utf-8" },
+    );
+    const running = output.trim() === "true";
+    debug(`${appPath}: ${running ? "running" : "not running"}`);
+    return running;
   } catch {
+    debug(`${appPath}: failed to check running state`);
     return false;
   }
 }
 
-function reloadConfigInApp(appName: string): void {
+function reloadConfigInApp(appPath: string): void {
   execFileSync(
     "osascript",
     [
       "-e",
-      `tell application "${escapeAppleScriptString(appName)}"`,
+      `tell application "${escapeAppleScriptString(appPath)}"`,
       "-e",
-      "set win to front window",
+      "set reloadCount to 0",
       "-e",
-      "set tab1 to selected tab of win",
+      "repeat with win in windows",
       "-e",
-      "set term1 to focused terminal of tab1",
+      "repeat with tab1 in tabs of win",
+      "-e",
+      "repeat with term1 in terminals of tab1",
       "-e",
       'perform action "reload_config" on term1',
+      "-e",
+      "set reloadCount to reloadCount + 1",
+      "-e",
+      "end repeat",
+      "-e",
+      "end repeat",
+      "-e",
+      "end repeat",
+      "-e",
+      "if reloadCount is 0 then error \"No terminals found.\"",
       "-e",
       "end tell",
     ],
     { stdio: "ignore" },
   );
+  debug(`reloaded config in ${appPath}`);
 }
 
 function reloadTerminalConfigs(): void {
@@ -120,25 +168,34 @@ function reloadTerminalConfigs(): void {
   }
 
   const apps = [
-    { appName: "Ghostty", processNames: ["Ghostty", "ghostty"] },
-    { appName: "Cmux", processNames: ["Cmux", "cmux"] },
+    {
+      appName: "Ghostty",
+      appPath: getAppPath("ghostty", "Ghostty"),
+    },
+    {
+      appName: "Cmux",
+      appPath: getAppPath("cmux", "cmux"),
+    },
   ];
 
-  let reloadCount = 0;
   const failedApps: string[] = [];
 
-  for (const { appName, processNames } of apps) {
-    if (processNames.some(isProcessRunning)) {
-      try {
-        reloadConfigInApp(appName);
-        reloadCount++;
-      } catch {
-        failedApps.push(appName);
-      }
+  for (const { appName, appPath } of apps) {
+    debug(`${appName}: checking app path ${appPath}`);
+    if (!isAppRunning(appPath)) {
+      debug(`${appName}: skipped because the app is not running`);
+      continue;
+    }
+
+    try {
+      reloadConfigInApp(appPath);
+    } catch {
+      debug(`${appName}: reload failed`);
+      failedApps.push(appName);
     }
   }
 
-  if (reloadCount === 0 && failedApps.length > 0) {
+  if (failedApps.length > 0) {
     throw new Error(`Failed to reload config in ${failedApps.join(" and ")}.`);
   }
 }
@@ -165,6 +222,7 @@ export function getCurrentTheme(): string | null {
 
 export function setTheme(themeName: string): void {
   const configPath = getConfigPath();
+  debug(`writing theme "${themeName}" to ${configPath}`);
   let content = readConfig();
   const lines = content.split("\n");
 
